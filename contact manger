@@ -1,0 +1,154 @@
+import React from "react";
+import axios from "axios";
+
+class RestaurantManager extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            restaurants: [],
+            isUpdated: false,
+            isId: '',
+            ipName: '',
+            ipAddress: '',
+            ipPhone: '',
+            ipCuisine: '',
+            statusMsg: ''
+        };
+    }
+
+    componentDidMount() {
+        axios.get("http://localhost:3001/restaurants")
+            .then(res => this.setState({ restaurants: res.data }))
+            .catch(err => console.log("Error fetching data"));
+    }
+
+    handleChange = (e, keyword) => {
+        const value = e.target.value;
+        if (keyword === "restaurantName") {
+            this.setState({ ipName: value });
+        } else if (keyword === "restaurantAddress") {
+            this.setState({ ipAddress: value });
+        } else if (keyword === "restaurantPhone") {
+            this.setState({ ipPhone: value });
+        } else if (keyword === "restaurantCuisine") {
+            this.setState({ ipCuisine: value });
+        }
+    };
+
+    handleSubmit = (e) => {
+        e.preventDefault();
+        const { ipName, ipAddress, ipPhone, ipCuisine, isUpdated, isId } = this.state;
+
+        if (isUpdated) {
+            axios.put(`http://localhost:3001/restaurants/${isId}`, {
+                name: ipName,
+                address: ipAddress,
+                phone: ipPhone,
+                cuisine: ipCuisine
+            })
+            .then(res => {
+                const temp = this.state.restaurants;
+                const index = temp.findIndex(item => item.id === res.data.id);
+                temp.splice(index, 1, res.data);
+                this.setState({ restaurants: temp });
+                this.setState({ statusMsg: "Restaurant updated successfully" });
+            })
+            .catch(err => this.setState({ statusMsg: "Error updating restaurant" }));
+
+            this.setState({ isUpdated: !this.state.isUpdated });
+        } else {
+            axios.post("http://localhost:3001/restaurants", {
+                name: ipName,
+                address: ipAddress,
+                phone: ipPhone,
+                cuisine: ipCuisine
+            })
+            .then(res => {
+                this.setState({ restaurants: [...this.state.restaurants, res.data] });
+                this.setState({ statusMsg: "Restaurant added successfully" });
+            })
+            .catch(err => this.setState({ statusMsg: "Error adding restaurant" }));
+        }
+
+        this.setState({ ipName: '', ipAddress: '', ipPhone: '', ipCuisine: '' });
+        this.setState({ isUpdated: false, isId: '' });
+    };
+
+    handleDelete = (e, keyid) => {
+        axios.delete(`http://localhost:3001/restaurants/${keyid}`)
+            .then(res => {
+                const temp = this.state.restaurants.filter(item => item.id !== keyid);
+                this.setState({ restaurants: temp });
+                this.setState({ statusMsg: "Restaurant deleted successfully" });
+            })
+            .catch(error => this.setState({ statusMsg: "Error deleting restaurant" }));
+    };
+
+    handleUpdate = (e, keyid) => {
+        const restaurant = this.state.restaurants.find(r => r.id === keyid);
+        if (restaurant) {
+            this.setState({
+                ipName: restaurant.name,
+                ipAddress: restaurant.address,
+                ipPhone: restaurant.phone,
+                ipCuisine: restaurant.cuisine,
+                isUpdated: true,
+                isId: keyid
+            });
+        }
+    };
+
+    render() {
+        return (
+            <>
+                <form onSubmit={this.handleSubmit}>
+                    <input
+                        type="text"
+                        placeholder="Restaurant Name"
+                        onChange={(e) => this.handleChange(e, "restaurantName")}
+                        value={this.state.ipName}
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="Address"
+                        onChange={(e) => this.handleChange(e, "restaurantAddress")}
+                        value={this.state.ipAddress}
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="Phone Number"
+                        onChange={(e) => this.handleChange(e, "restaurantPhone")}
+                        value={this.state.ipPhone}
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="Cuisine"
+                        onChange={(e) => this.handleChange(e, "restaurantCuisine")}
+                        value={this.state.ipCuisine}
+                        required
+                    />
+                    <button type="submit">
+                        {this.state.isUpdated ? "Update Restaurant" : "Add Restaurant"}
+                    </button>
+                </form>
+                <p>{this.state.statusMsg}</p>
+                {this.state.restaurants.map(item => (
+                    <div key={item.id}>
+                        <h2>Name: {item.name}</h2>
+                        <p>Address: {item.address}</p>
+                        <p>Phone: {item.phone}</p>
+                        <p>Cuisine: {item.cuisine}</p>
+                        <button onClick={(e) => this.handleDelete(e, item.id)}>Delete</button>
+                        <button onClick={(e) => this.handleUpdate(e, item.id)}>Update</button>
+                        <hr />
+                    </div>
+                ))}
+            </>
+        );
+    }
+}
+
+export default RestaurantManager;
