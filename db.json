@@ -1,0 +1,18 @@
+{
+  "restaurants": [
+    {
+      "id": 1,
+      "name": "The Kavya Kitchen",
+      "address": "Bowenpally",
+      "phone": "8328478764",
+      "cuisine": "Indian"
+    },
+    {
+      "id": 2,
+      "name": "Pizza Paradise",
+      "address": "sanikpuri",
+      "phone": "910043554",
+      "cuisine": "Italian"
+    }
+  ]
+}
